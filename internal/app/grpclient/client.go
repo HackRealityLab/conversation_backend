@@ -39,16 +39,17 @@ func NewGRPCClient(aiConfig *config.AIConfig) *AppClient {
 }
 
 func (c *AppClient) SendFileToAI(filesCh <-chan FileRequest) {
-	streamGreater, err := c.client.AnalyzeAudio(context.Background())
+	streamRequest, err := c.client.AnalyzeAudio(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	doneCh := make(chan struct{})
-	go asyncClientBidirectionalRPC(streamGreater, doneCh)
+	go asyncClientBidirectionalRPC(streamRequest, doneCh)
 
 	for request := range filesCh {
-		err = streamGreater.Send(&conversation.ConversationRequest{
+		log.Printf("Send request: %+v", request)
+		err = streamRequest.Send(&conversation.ConversationRequest{
 			ConversationID: request.UUID,
 			FileName:       request.FileName,
 			File:           request.FileBytes,
@@ -56,10 +57,12 @@ func (c *AppClient) SendFileToAI(filesCh <-chan FileRequest) {
 
 		if err != nil {
 			log.Println(err)
+		} else {
+			log.Printf("Got error: %s", err.Error())
 		}
 	}
 
-	err = streamGreater.CloseSend()
+	err = streamRequest.CloseSend()
 	if err != nil {
 		log.Fatal()
 	}
