@@ -52,7 +52,6 @@ func NewConversationHandler(
 //	@Description	Принимает текст разговора
 //	@ID				load-conversation-text
 //
-// @Accept  json
 // @Param input body dto.ConversationRequest true "текст сообщения"
 //
 //	@Produce		json
@@ -85,7 +84,7 @@ func (h *ConversationHandler) LoadConversationText(w http.ResponseWriter, r *htt
 //
 //	@Summary		Загрузка аудиофайла разговора
 //	@Tags			conversation
-//	@Description	Принимает текст разговора
+//	@Description	Принимает аудиофайл разговора
 //	@ID				load-conversation-file
 //	@Accept			multipart/form-data
 //	@Produce		json
