@@ -237,9 +237,9 @@ func (h *ConversationHandler) SendFileToAI(w http.ResponseWriter, r *http.Reques
 // GetRecords docs
 //
 //	@Summary		Получение записей
-//	@Tags			conversation
+//	@Tags			record
 //	@Description	Отправка записей
-//	@ID				send-file-ai
+//	@ID				get-records
 //	@Produce		json
 //	@Success		200		{object}	[]domain.Record
 //	@Failure		400	{object}	response.Body
@@ -267,9 +267,9 @@ func (h *ConversationHandler) GetRecords(w http.ResponseWriter, r *http.Request)
 // GetRecord docs
 //
 //	@Summary		Получение записи
-//	@Tags			conversation
+//	@Tags			record
 //	@Description	Получение записи
-//	@ID				send-file-ai
+//	@ID				get-record
 //	@Produce		json
 //	@Success		200		{object}	domain.Record
 //	@Failure		400	{object}	response.Body
