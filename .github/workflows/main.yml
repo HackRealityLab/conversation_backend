@@ -34,5 +34,5 @@ jobs:
             key: ${{ secrets.SERVER_KEY }}
             run: |
               cd conversation
-              docker-compose pull
-              docker-compose up -d
+              docker compose pull
+              docker compose up -d
