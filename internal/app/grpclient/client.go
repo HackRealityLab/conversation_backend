@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"time"
 
 	"Hackathon/internal/config"
 	conversation "Hackathon/pkg/proto"
@@ -58,7 +59,7 @@ func (c *AppClient) SendFileToAI(filesCh <-chan FileRequest) {
 		if err != nil {
 			log.Printf("Got error: %s", err.Error())
 		} else {
-			log.Println(err)
+			log.Printf("No error: %v", err)
 		}
 	}
 
@@ -97,20 +98,20 @@ func (c *AppClient) AnalyzeTest() {
 }
 
 func asyncClientBidirectionalRPC(
-	streamGreater conversation.Conversation_AnalyzeAudioClient,
+	streamConversation conversation.Conversation_AnalyzeAudioClient,
 	doneCh chan struct{},
 ) {
 	for {
-		reply, err := streamGreater.Recv()
+		reply, err := streamConversation.Recv()
 		if err == io.EOF {
 			break
 		}
-
 		if reply == nil {
-
-		} else {
-			log.Printf("Received reply: %s\n", reply.Text)
+			continue
 		}
+
+		log.Printf("Received reply: %s\n", reply.Text)
+		time.Sleep(1 * time.Second)
 	}
 
 	doneCh <- struct{}{}
