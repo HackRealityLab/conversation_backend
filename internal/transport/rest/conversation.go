@@ -51,6 +51,10 @@ func NewConversationHandler(
 //	@Tags			conversation
 //	@Description	Принимает текст разговора
 //	@ID				load-conversation-text
+//
+// @Accept  json
+// @Param input body dto.ConversationRequest true "текст сообщения"
+//
 //	@Produce		json
 //	@Success		200		{object}	response.Body
 //	@Failure		400	{object}	response.Body
