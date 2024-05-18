@@ -107,7 +107,7 @@ func asyncClientBidirectionalRPC(
 		}
 
 		if reply == nil {
-			log.Printf("Reply is nil: %v", reply)
+
 		} else {
 			log.Printf("Received reply: %s\n", reply.Text)
 		}
