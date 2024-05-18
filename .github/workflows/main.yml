@@ -31,7 +31,7 @@ jobs:
           with:
             host: ${{ secrets.VIRTUAL_IP }}
             user: ${{ secrets.VIRTUAL_LOGIN }}
-            pass: ${{ secrets.VIRTUAL_PASS }}
+            key: ${{ secrets.SERVER_KEY }}
             run: |
               cd conversation
               docker-compose pull
