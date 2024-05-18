@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  dto.ConversationRequest:
+    properties:
+      text:
+        type: string
+    required:
+    - text
+    type: object
   response.Body:
     properties:
       message:
@@ -15,7 +22,7 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: Принимает текст разговора
+      description: Принимает аудиофайл разговора
       operationId: load-conversation-file
       produces:
       - application/json
@@ -26,10 +33,6 @@ paths:
             $ref: '#/definitions/response.Body'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Body'
-        "401":
-          description: Unauthorized
           schema:
             $ref: '#/definitions/response.Body'
         "500":
@@ -45,7 +48,7 @@ paths:
       - conversation
   /conversation/file/{name}:
     get:
-      description: Получение аудиофайла разговора по его названию
+      description: Получение аудиофайла разговора по его названию. Возвращает файл
       operationId: get-conversation-file
       produces:
       - multipart/form-data
@@ -56,10 +59,6 @@ paths:
             type: file
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Body'
-        "401":
-          description: Unauthorized
           schema:
             $ref: '#/definitions/response.Body'
         "500":
@@ -83,13 +82,9 @@ paths:
         "200":
           description: OK
           schema:
-            type: file
+            $ref: '#/definitions/response.Body'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Body'
-        "401":
-          description: Unauthorized
           schema:
             $ref: '#/definitions/response.Body'
         "500":
@@ -107,6 +102,13 @@ paths:
     post:
       description: Принимает текст разговора
       operationId: load-conversation-text
+      parameters:
+      - description: текст сообщения
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ConversationRequest'
       produces:
       - application/json
       responses:
@@ -116,10 +118,6 @@ paths:
             $ref: '#/definitions/response.Body'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Body'
-        "401":
-          description: Unauthorized
           schema:
             $ref: '#/definitions/response.Body'
         "500":

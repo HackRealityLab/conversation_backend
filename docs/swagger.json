@@ -10,7 +10,7 @@
     "paths": {
         "/conversation/file": {
             "post": {
-                "description": "Принимает текст разговора",
+                "description": "Принимает аудиофайл разговора",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -31,12 +31,6 @@
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Body"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Body"
                         }
@@ -71,17 +65,11 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "file"
+                            "$ref": "#/definitions/response.Body"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Body"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Body"
                         }
@@ -103,7 +91,7 @@
         },
         "/conversation/file/{name}": {
             "get": {
-                "description": "Получение аудиофайла разговора по его названию",
+                "description": "Получение аудиофайла разговора по его названию. Возвращает файл",
                 "produces": [
                     "multipart/form-data"
                 ],
@@ -121,12 +109,6 @@
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Body"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Body"
                         }
@@ -157,6 +139,17 @@
                 ],
                 "summary": "Загрузка текста разговора",
                 "operationId": "load-conversation-text",
+                "parameters": [
+                    {
+                        "description": "текст сообщения",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ConversationRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -166,12 +159,6 @@
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Body"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Body"
                         }
@@ -193,6 +180,17 @@
         }
     },
     "definitions": {
+        "dto.ConversationRequest": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "response.Body": {
             "type": "object",
             "properties": {

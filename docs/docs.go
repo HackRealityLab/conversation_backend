@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/conversation/file": {
             "post": {
-                "description": "Принимает текст разговора",
+                "description": "Принимает аудиофайл разговора",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -38,12 +38,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Body"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Body"
                         }
@@ -78,17 +72,11 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "file"
+                            "$ref": "#/definitions/response.Body"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Body"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Body"
                         }
@@ -110,7 +98,7 @@ const docTemplate = `{
         },
         "/conversation/file/{name}": {
             "get": {
-                "description": "Получение аудиофайла разговора по его названию",
+                "description": "Получение аудиофайла разговора по его названию. Возвращает файл",
                 "produces": [
                     "multipart/form-data"
                 ],
@@ -128,12 +116,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Body"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Body"
                         }
@@ -164,6 +146,17 @@ const docTemplate = `{
                 ],
                 "summary": "Загрузка текста разговора",
                 "operationId": "load-conversation-text",
+                "parameters": [
+                    {
+                        "description": "текст сообщения",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ConversationRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -173,12 +166,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Body"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Body"
                         }
@@ -200,6 +187,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ConversationRequest": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "response.Body": {
             "type": "object",
             "properties": {
