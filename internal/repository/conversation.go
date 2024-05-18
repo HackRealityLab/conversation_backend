@@ -16,8 +16,10 @@ type conversationRepo struct {
 	conn *pgx.Conn
 }
 
-func NewConversationRepo(conn *pgx.Conn) {
-
+func NewConversationRepo(conn *pgx.Conn) ConversationRepo {
+	return &conversationRepo{
+		conn: conn,
+	}
 }
 
 const getRecordsQuery = `SELECT conversation_id, text, audio_name, created_at, good_percent,

@@ -9,8 +9,11 @@ import (
 
 	"Hackathon/internal/app/grpclient"
 	"Hackathon/internal/config"
+	"Hackathon/internal/repository"
+	"Hackathon/internal/service"
 	"Hackathon/internal/transport/rest"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -46,8 +49,18 @@ func Run() {
 }
 
 func runRestServer(cfg *config.Config, minioClient *minio.Client, filesCh chan<- grpclient.FileRequest) {
+	dbConnStr := "postgresql://user:user@postgres:5432/conversations_db"
+	dbConn, err := pgx.Connect(context.Background(), dbConnStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbConn.Close(context.Background())
+
 	validate := validator.New(validator.WithRequiredStructEnabled())
-	conversationHandler := rest.NewConversationHandler(validate, minioClient, cfg.MinioConfig, filesCh)
+	repo := repository.NewConversationRepo(dbConn)
+	converterService := service.NewConversationService(repo)
+
+	conversationHandler := rest.NewConversationHandler(validate, minioClient, cfg.MinioConfig, filesCh, converterService)
 
 	mux := newServeMux(conversationHandler)
 
@@ -57,7 +70,7 @@ func runRestServer(cfg *config.Config, minioClient *minio.Client, filesCh chan<-
 	}
 	log.Printf("Run server on %s", server.Addr)
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
