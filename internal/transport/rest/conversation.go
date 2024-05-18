@@ -8,10 +8,12 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"Hackathon/internal/app/grpclient"
 	"Hackathon/internal/config"
+	"Hackathon/internal/service"
 	"Hackathon/internal/transport/dto"
 	"Hackathon/internal/transport/response"
 	"github.com/go-playground/validator/v10"
@@ -22,6 +24,7 @@ import (
 const (
 	conversationFileKey = "file"
 	namePathValueKey    = "name"
+	idPathValueKey      = "id"
 )
 
 type ConversationHandler struct {
@@ -29,6 +32,7 @@ type ConversationHandler struct {
 	minioClient *minio.Client
 	minioCfg    *config.MinioConfig
 	filesCh     chan<- grpclient.FileRequest
+	service     service.ConversationService
 }
 
 func NewConversationHandler(
@@ -36,12 +40,14 @@ func NewConversationHandler(
 	minioClient *minio.Client,
 	minioCfg *config.MinioConfig,
 	filesCh chan<- grpclient.FileRequest,
+	service service.ConversationService,
 ) *ConversationHandler {
 	return &ConversationHandler{
 		validate:    validate,
 		minioClient: minioClient,
 		minioCfg:    minioCfg,
 		filesCh:     filesCh,
+		service:     service,
 	}
 }
 
@@ -226,4 +232,75 @@ func (h *ConversationHandler) SendFileToAI(w http.ResponseWriter, r *http.Reques
 	}
 
 	response.OKMessage(w, "file sent to AI successfully")
+}
+
+// GetRecords docs
+//
+//	@Summary		Получение записей
+//	@Tags			conversation
+//	@Description	Отправка записей
+//	@ID				send-file-ai
+//	@Produce		json
+//	@Success		200		{object}	[]domain.Record
+//	@Failure		400	{object}	response.Body
+//	@Failure		500		{object}	response.Body
+//	@Failure		default	{object}	response.Body
+//	@Router			/conversation/records [get]
+func (h *ConversationHandler) GetRecords(w http.ResponseWriter, r *http.Request) {
+	records, err := h.service.GetRecords()
+	if err != nil {
+		log.Println(err)
+		response.InternalServerError(w)
+		return
+	}
+
+	respBytes, err := json.Marshal(records)
+	if err != nil {
+		log.Println(err)
+		response.InternalServerError(w)
+		return
+	}
+
+	response.WriteResponse(w, http.StatusOK, respBytes)
+}
+
+// GetRecord docs
+//
+//	@Summary		Получение записи
+//	@Tags			conversation
+//	@Description	Получение записи
+//	@ID				send-file-ai
+//	@Produce		json
+//	@Success		200		{object}	domain.Record
+//	@Failure		400	{object}	response.Body
+//	@Failure		500		{object}	response.Body
+//	@Failure		default	{object}	response.Body
+//	@Router			/conversation/records/{id} [get]
+func (h *ConversationHandler) GetRecord(w http.ResponseWriter, r *http.Request) {
+	rawID := r.PathValue(idPathValueKey)
+	if rawID == "" {
+		response.BadRequest(w, "path value 'id' is empty")
+		return
+	}
+	id, err := strconv.Atoi(rawID)
+	if err != nil {
+		response.BadRequest(w, err.Error())
+		return
+	}
+
+	record, err := h.service.GetRecord(id)
+	if err != nil {
+		log.Println(err)
+		response.InternalServerError(w)
+		return
+	}
+
+	respBytes, err := json.Marshal(record)
+	if err != nil {
+		log.Println(err)
+		response.InternalServerError(w)
+		return
+	}
+
+	response.WriteResponse(w, http.StatusOK, respBytes)
 }

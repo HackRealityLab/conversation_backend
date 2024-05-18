@@ -102,16 +102,17 @@ func asyncClientBidirectionalRPC(
 	doneCh chan struct{},
 ) {
 	for {
+		log.Println("start recv")
 		reply, err := streamConversation.Recv()
 		if err == io.EOF {
 			break
 		}
 		if reply == nil {
+			time.Sleep(10 * time.Second)
 			continue
 		}
 
 		log.Printf("Received reply: %s\n", reply.Text)
-		time.Sleep(1 * time.Second)
 	}
 
 	doneCh <- struct{}{}

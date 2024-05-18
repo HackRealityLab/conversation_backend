@@ -75,6 +75,9 @@ func newServeMux(
 	mux.HandleFunc("GET /conversation/file/{name}", conversationHandler.GetConversationFile)
 	mux.HandleFunc("POST /conversation/file/send_ai/{name}", conversationHandler.SendFileToAI)
 
+	mux.HandleFunc("GET /conversation/records", conversationHandler.GetRecords)
+	mux.HandleFunc("GET /conversation/records/{id}", conversationHandler.GetRecord)
+
 	return mux
 }
 
