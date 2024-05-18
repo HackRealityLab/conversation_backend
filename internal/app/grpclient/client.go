@@ -48,7 +48,7 @@ func (c *AppClient) SendFileToAI(filesCh <-chan FileRequest) {
 	go asyncClientBidirectionalRPC(streamRequest, doneCh)
 
 	for request := range filesCh {
-		log.Printf("Send request: %+v", request)
+		log.Printf("Send file with name: %s", request.FileName)
 		err = streamRequest.Send(&conversation.ConversationRequest{
 			ConversationID: request.UUID,
 			FileName:       request.FileName,
@@ -56,9 +56,9 @@ func (c *AppClient) SendFileToAI(filesCh <-chan FileRequest) {
 		})
 
 		if err != nil {
-			log.Println(err)
-		} else {
 			log.Printf("Got error: %s", err.Error())
+		} else {
+			log.Println(err)
 		}
 	}
 
