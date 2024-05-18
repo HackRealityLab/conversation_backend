@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package conversation;
+
+option go_package = "./;conversation";
+
+service Conversation {
+  rpc AnalyzeAudio (stream ConversationRequest) returns (stream ConversationReply) {}
+}
+
+message ConversationRequest {
+  string conversationID = 1;
+  string fileName = 2;
+  bytes file = 3;
+}
+
+// The response message containing the greetings
+message ConversationReply {
+  string text = 1;
+}

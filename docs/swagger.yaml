@@ -1,0 +1,136 @@
+basePath: /
+definitions:
+  response.Body:
+    properties:
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API Server for Hackathon
+  title: Hackathon API
+  version: "1.0"
+paths:
+  /conversation/file:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Принимает текст разговора
+      operationId: load-conversation-file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Body'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Body'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Body'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Body'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/response.Body'
+      summary: Загрузка аудиофайла разговора
+      tags:
+      - conversation
+  /conversation/file/{name}:
+    get:
+      description: Получение аудиофайла разговора по его названию
+      operationId: get-conversation-file
+      produces:
+      - multipart/form-data
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Body'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Body'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Body'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/response.Body'
+      summary: Получение аудиофайла разговора по его названию
+      tags:
+      - conversation
+  /conversation/file/send_ai/{name}:
+    post:
+      description: Отправка аудиофайла нейронке
+      operationId: send-file-ai
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Body'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Body'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Body'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/response.Body'
+      summary: Отправка аудиофайла нейронке
+      tags:
+      - conversation
+  /conversation/text:
+    post:
+      description: Принимает текст разговора
+      operationId: load-conversation-text
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Body'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Body'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Body'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Body'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/response.Body'
+      summary: Загрузка текста разговора
+      tags:
+      - conversation
+swagger: "2.0"
