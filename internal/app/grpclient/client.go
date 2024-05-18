@@ -103,7 +103,11 @@ func asyncClientBidirectionalRPC(
 			break
 		}
 
-		log.Printf("Received reply: %s\n", reply.Text)
+		if reply == nil {
+			log.Printf("Reply is nil: %v", reply)
+		} else {
+			log.Printf("Received reply: %s\n", reply.Text)
+		}
 	}
 
 	doneCh <- struct{}{}
