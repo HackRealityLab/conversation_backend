@@ -36,6 +36,7 @@ func Run() {
 	go func() {
 		runRestServer(cfg, minioClient, filesCh)
 	}()
+
 	go func() {
 		runGrpcClient(cfg.AIConfig, filesCh)
 	}()
