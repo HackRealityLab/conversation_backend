@@ -99,8 +99,8 @@ func (r *conversationRepo) InsertMainRecordInfo(audioName string, createdAt time
 }
 
 const insertAdditionRecordInfoQuery = `
-UPDATE conversation(audio_text, good_percent, bad_percent)
-VALUES ($1, $2, $3)
+UPDATE conversation
+SET audio_text=$1, good_percent=$2, bad_percent=$3
 WHERE conversation_id=$4
 `
 

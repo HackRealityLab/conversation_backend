@@ -239,7 +239,7 @@ func (h *ConversationHandler) SendFileToAI(w http.ResponseWriter, r *http.Reques
 	}
 
 	h.filesCh <- conversation.ConversationRequest{
-		ConversationID: 0,
+		ConversationID: 1,
 		FileName:       name,
 		File:           buf.Bytes(),
 	}
