@@ -17,7 +17,7 @@ func RecordDomainToDto(d domain.Record) dto.Record {
 }
 
 func RecordSliceDomainToDto(d []domain.Record) []dto.Record {
-	res := make([]dto.Record, len(d))
+	res := make([]dto.Record, 0, len(d))
 
 	for _, r := range d {
 		res = append(res, RecordDomainToDto(r))
