@@ -36,7 +36,7 @@ func (r *conversationRepo) GetRecords() ([]domain.Record, error) {
 
 	records := make([]domain.Record, 0)
 	for rows.Next() {
-		var record domain.Record
+		record := domain.Record{}
 		err = rows.Scan(
 			&record.ID,
 			&record.Text,
@@ -62,7 +62,7 @@ WHERE conversation_id=$1`
 
 func (r *conversationRepo) GetRecord(ID int) (domain.Record, error) {
 	row := r.conn.QueryRow(context.Background(), getRecordQuery, ID)
-	var record domain.Record
+	record := domain.Record{}
 
 	err := row.Scan(
 		&record.ID,
@@ -81,7 +81,6 @@ INSERT INTO conversation(audio_name, created_at)
 VALUES ($1, $2) RETURNING conversation_id`
 
 func (r *conversationRepo) InsertMainRecordInfo(audioName string, createdAt time.Time) (domain.Record, error) {
-	r.conn.QueryRow(context.Background(), insertMainRecordInfoQuery, audioName, createdAt)
 	row := r.conn.QueryRow(context.Background(), insertMainRecordInfoQuery, audioName, createdAt)
 
 	var id int
