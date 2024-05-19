@@ -102,6 +102,20 @@ networks:
 Далее: `docker compose up -d`
 
 Демонстрация:
+
 Загрузка файла:
 
 ![screenshot](img/1.png)
+
+Получение списка записей:
+
+![screenshot](img/2.png)
+
+
+Получение кокретной записи:
+
+![screenshot](img/3.png)
+
+Загрузка аудиофайла:
+
+![screenshot](img/4.png)
