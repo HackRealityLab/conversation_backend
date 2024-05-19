@@ -8,23 +8,21 @@ import (
 	"time"
 
 	"Hackathon/internal/config"
+	"Hackathon/internal/service"
 	conversation "Hackathon/pkg/proto"
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type AppClient struct {
-	client conversation.ConversationClient
+	client  conversation.ConversationClient
+	service service.ConversationService
 }
 
-type FileRequest struct {
-	UUID      string
-	FileName  string
-	FileBytes []byte
-}
-
-func NewGRPCClient(aiConfig *config.AIConfig) *AppClient {
+func NewGRPCClient(
+	aiConfig *config.AIConfig,
+	service service.ConversationService,
+) *AppClient {
 	target := fmt.Sprintf("%s:%s", aiConfig.Host, aiConfig.Port)
 
 	transportOpt := grpc.WithTransportCredentials(insecure.NewCredentials())
@@ -35,26 +33,23 @@ func NewGRPCClient(aiConfig *config.AIConfig) *AppClient {
 
 	client := conversation.NewConversationClient(conn)
 	return &AppClient{
-		client: client,
+		client:  client,
+		service: service,
 	}
 }
 
-func (c *AppClient) SendFileToAI(filesCh <-chan FileRequest) {
+func (c *AppClient) SendFileToAI(filesCh <-chan conversation.ConversationRequest) {
 	streamRequest, err := c.client.AnalyzeAudio(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	doneCh := make(chan struct{})
-	go asyncClientBidirectionalRPC(streamRequest, doneCh)
+	go c.asyncClientBidirectionalRPC(streamRequest, doneCh)
 
 	for request := range filesCh {
 		log.Printf("Send file with name: %s", request.FileName)
-		err = streamRequest.Send(&conversation.ConversationRequest{
-			ConversationID: request.UUID,
-			FileName:       request.FileName,
-			File:           request.FileBytes,
-		})
+		err = streamRequest.Send(&request)
 
 		if err != nil {
 			log.Printf("Got error: %s", err.Error())
@@ -71,33 +66,7 @@ func (c *AppClient) SendFileToAI(filesCh <-chan FileRequest) {
 	<-doneCh
 }
 
-func (c *AppClient) AnalyzeTest() {
-	streamGreater, err := c.client.AnalyzeAudio(context.Background())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	doneCh := make(chan struct{})
-	go asyncClientBidirectionalRPC(streamGreater, doneCh)
-
-	err = streamGreater.Send(&conversation.ConversationRequest{
-		ConversationID: uuid.New().String(),
-		File:           []byte{1, 2, 3, 4, 5, 6},
-	})
-	if err != nil {
-		log.Println(err)
-	}
-
-	err = streamGreater.CloseSend()
-	if err != nil {
-		log.Fatal()
-	}
-
-	<-doneCh
-	log.Println("Stop bidi streaming")
-}
-
-func asyncClientBidirectionalRPC(
+func (c *AppClient) asyncClientBidirectionalRPC(
 	streamConversation conversation.Conversation_AnalyzeAudioClient,
 	doneCh chan struct{},
 ) {
@@ -111,6 +80,15 @@ func asyncClientBidirectionalRPC(
 			time.Sleep(10 * time.Second)
 			continue
 		}
+
+		err = c.service.InsertAdditionRecordInfo(
+			int(reply.ConversationID),
+			reply.Text,
+			int(reply.GoodPercent),
+			int(reply.BadPercent),
+		)
+
+		log.Printf("Err while insert additional info: %s", err.Error())
 
 		log.Printf("Received reply: %s\n", reply.Text)
 	}

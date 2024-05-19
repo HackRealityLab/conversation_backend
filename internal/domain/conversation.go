@@ -8,5 +8,5 @@ type Record struct {
 	AudioName   string
 	CreatedAt   time.Time
 	GoodPercent int
-	IsOk        bool
+	BadPercent  int
 }

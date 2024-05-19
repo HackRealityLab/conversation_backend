@@ -11,13 +11,13 @@ import (
 	"strconv"
 	"time"
 
-	"Hackathon/internal/app/grpclient"
 	"Hackathon/internal/config"
+	"Hackathon/internal/converter"
 	"Hackathon/internal/service"
 	"Hackathon/internal/transport/dto"
 	"Hackathon/internal/transport/response"
+	conversation "Hackathon/pkg/proto"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -31,7 +31,7 @@ type ConversationHandler struct {
 	validate    *validator.Validate
 	minioClient *minio.Client
 	minioCfg    *config.MinioConfig
-	filesCh     chan<- grpclient.FileRequest
+	filesCh     chan<- conversation.ConversationRequest
 	service     service.ConversationService
 }
 
@@ -39,7 +39,7 @@ func NewConversationHandler(
 	validate *validator.Validate,
 	minioClient *minio.Client,
 	minioCfg *config.MinioConfig,
-	filesCh chan<- grpclient.FileRequest,
+	filesCh chan<- conversation.ConversationRequest,
 	service service.ConversationService,
 ) *ConversationHandler {
 	return &ConversationHandler{
@@ -114,6 +114,13 @@ func (h *ConversationHandler) LoadConversationFile(w http.ResponseWriter, r *htt
 		return
 	}
 
+	record, err := h.service.InsertMainRecordInfo(header.Filename)
+	if err != nil {
+		log.Println(err)
+		response.InternalServerError(w)
+		return
+	}
+
 	bucketName := h.minioCfg.ConversationBucket
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
@@ -138,6 +145,12 @@ func (h *ConversationHandler) LoadConversationFile(w http.ResponseWriter, r *htt
 	}
 
 	log.Printf("Successfully uploaded %s of size %d\n", header.Filename, info.Size)
+
+	h.filesCh <- conversation.ConversationRequest{
+		ConversationID: int64(record.ID),
+		FileName:       record.AudioName,
+		File:           fileBytes,
+	}
 
 	msg := fmt.Sprintf("file extension: %s", extension)
 	response.OKMessage(w, msg)
@@ -225,10 +238,10 @@ func (h *ConversationHandler) SendFileToAI(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	h.filesCh <- grpclient.FileRequest{
-		UUID:      uuid.New().String(),
-		FileName:  name,
-		FileBytes: buf.Bytes(),
+	h.filesCh <- conversation.ConversationRequest{
+		ConversationID: 0,
+		FileName:       name,
+		File:           buf.Bytes(),
 	}
 
 	response.OKMessage(w, "file sent to AI successfully")
@@ -241,7 +254,7 @@ func (h *ConversationHandler) SendFileToAI(w http.ResponseWriter, r *http.Reques
 //	@Description	Отправка записей
 //	@ID				get-records
 //	@Produce		json
-//	@Success		200		{object}	[]domain.Record
+//	@Success		200		{object}	[]dto.Record
 //	@Failure		400	{object}	response.Body
 //	@Failure		500		{object}	response.Body
 //	@Failure		default	{object}	response.Body
@@ -254,7 +267,9 @@ func (h *ConversationHandler) GetRecords(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	respBytes, err := json.Marshal(records)
+	recordsDto := converter.RecordSliceDomainToDto(records)
+
+	respBytes, err := json.Marshal(recordsDto)
 	if err != nil {
 		log.Println(err)
 		response.InternalServerError(w)
@@ -271,7 +286,7 @@ func (h *ConversationHandler) GetRecords(w http.ResponseWriter, r *http.Request)
 //	@Description	Получение записи
 //	@ID				get-record
 //	@Produce		json
-//	@Success		200		{object}	domain.Record
+//	@Success		200		{object}	dto.Record
 //	@Failure		400	{object}	response.Body
 //	@Failure		500		{object}	response.Body
 //	@Failure		default	{object}	response.Body
@@ -295,7 +310,9 @@ func (h *ConversationHandler) GetRecord(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	respBytes, err := json.Marshal(record)
+	recordDto := converter.RecordDomainToDto(record)
+
+	respBytes, err := json.Marshal(recordDto)
 	if err != nil {
 		log.Println(err)
 		response.InternalServerError(w)

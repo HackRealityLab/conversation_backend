@@ -1,11 +1,11 @@
 CREATE TABLE "conversation"
 (
-    "conversation_id" bigserial        NOT NULL,
-    "text"            TEXT             NULL,
-    "audio_name"      TEXT             NOT NULL,
-    "created_at"      DATE             NOT NULL,
-    "good_percent"    DOUBLE PRECISION NOT NULL,
-    "bad_percent"     DOUBLE PRECISION NOT NULL
+    "conversation_id" bigserial NOT NULL,
+    "audio_text"      TEXT      NULL,
+    "audio_name"      TEXT      NOT NULL,
+    "created_at"      DATE      NOT NULL,
+    "good_percent"    INTEGER   NULL,
+    "bad_percent"     INTEGER   NULL
 );
 ALTER TABLE
     "conversation"

@@ -13,6 +13,7 @@ import (
 	"Hackathon/internal/repository"
 	"Hackathon/internal/service"
 	"Hackathon/internal/transport/rest"
+	conversation "Hackathon/pkg/proto"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-migrate/migrate"
 	"github.com/jackc/pgx/v5"
@@ -39,33 +40,40 @@ func Run() {
 	}
 
 	runMigrations(dbConnStr)
-	filesCh := make(chan grpclient.FileRequest)
+	filesCh := make(chan conversation.ConversationRequest)
 	minioClient := setupMinio(cfg.MinioConfig)
 
-	go func() {
-		runRestServer(cfg, minioClient, dbConnStr, filesCh)
-	}()
-
-	go func() {
-		runGrpcClient(cfg.AIConfig, filesCh)
-	}()
-
-	<-ctx.Done()
-	close(filesCh)
-}
-
-func runRestServer(cfg *config.Config, minioClient *minio.Client, dbConnStr string, filesCh chan<- grpclient.FileRequest) {
 	dbConn, err := pgx.Connect(context.Background(), dbConnStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer dbConn.Close(context.Background())
 
-	validate := validator.New(validator.WithRequiredStructEnabled())
 	repo := repository.NewConversationRepo(dbConn)
-	converterService := service.NewConversationService(repo)
+	conversationService := service.NewConversationService(repo)
 
-	conversationHandler := rest.NewConversationHandler(validate, minioClient, cfg.MinioConfig, filesCh, converterService)
+	go func() {
+		runRestServer(cfg, minioClient, conversationService, filesCh)
+	}()
+
+	go func() {
+		runGrpcClient(cfg.AIConfig, filesCh, conversationService)
+	}()
+
+	<-ctx.Done()
+	close(filesCh)
+}
+
+func runRestServer(
+	cfg *config.Config,
+	minioClient *minio.Client,
+	conversationService service.ConversationService,
+	filesCh chan<- conversation.ConversationRequest,
+) {
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	conversationHandler := rest.NewConversationHandler(validate, minioClient, cfg.MinioConfig, filesCh, conversationService)
 
 	mux := newServeMux(conversationHandler)
 
@@ -75,7 +83,7 @@ func runRestServer(cfg *config.Config, minioClient *minio.Client, dbConnStr stri
 	}
 	log.Printf("Run server on %s", server.Addr)
 
-	err = server.ListenAndServe()
+	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -114,8 +122,12 @@ func newServeMux(
 	return mux
 }
 
-func runGrpcClient(aiConfig *config.AIConfig, filesCh <-chan grpclient.FileRequest) {
-	cl := grpclient.NewGRPCClient(aiConfig)
+func runGrpcClient(
+	aiConfig *config.AIConfig,
+	filesCh <-chan conversation.ConversationRequest,
+	conversationService service.ConversationService,
+) {
+	cl := grpclient.NewGRPCClient(aiConfig, conversationService)
 	cl.SendFileToAI(filesCh)
 }
 

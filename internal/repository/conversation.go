@@ -11,7 +11,8 @@ import (
 type ConversationRepo interface {
 	GetRecords() ([]domain.Record, error)
 	GetRecord(ID int) (domain.Record, error)
-	InsertMainRecordInfo(id int, audioName string, createdAt time.Time) error
+	InsertMainRecordInfo(audioName string, createdAt time.Time) (domain.Record, error)
+	InsertAdditionRecordInfo(id int, text string, goodPercent int, badPercent int) error
 }
 
 type conversationRepo struct {
@@ -24,7 +25,7 @@ func NewConversationRepo(conn *pgx.Conn) ConversationRepo {
 	}
 }
 
-const getRecordsQuery = `SELECT conversation_id, text, audio_name, created_at, good_percent,
+const getRecordsQuery = `SELECT conversation_id, audio_text, audio_name, created_at, good_percent,
 bad_percent FROM conversation`
 
 func (r *conversationRepo) GetRecords() ([]domain.Record, error) {
@@ -42,7 +43,7 @@ func (r *conversationRepo) GetRecords() ([]domain.Record, error) {
 			&record.AudioName,
 			&record.CreatedAt,
 			&record.GoodPercent,
-			&record.IsOk,
+			&record.BadPercent,
 		)
 
 		if err != nil {
@@ -55,7 +56,7 @@ func (r *conversationRepo) GetRecords() ([]domain.Record, error) {
 	return records, nil
 }
 
-const getRecordQuery = `SELECT conversation_id, text, audio_name, created_at, good_percent,
+const getRecordQuery = `SELECT conversation_id, audio_text, audio_name, created_at, good_percent,
 bad_percent FROM conversation
 WHERE conversation_id=$1`
 
@@ -69,16 +70,41 @@ func (r *conversationRepo) GetRecord(ID int) (domain.Record, error) {
 		&record.AudioName,
 		&record.CreatedAt,
 		&record.GoodPercent,
-		&record.IsOk,
+		&record.BadPercent,
 	)
 
 	return record, err
 }
 
 const insertMainRecordInfoQuery = `
-INSERT INTO conversation(conversation_id, audio_name, created_at)
-VALUES ($1, $2, $3)`
+INSERT INTO conversation(audio_name, created_at)
+VALUES ($1, $2) RETURNING conversation_id`
 
-func (r *conversationRepo) InsertMainRecordInfo(id int, audioName string, createdAt time.Time) error {
-	return nil
+func (r *conversationRepo) InsertMainRecordInfo(audioName string, createdAt time.Time) (domain.Record, error) {
+	r.conn.QueryRow(context.Background(), insertMainRecordInfoQuery, audioName, createdAt)
+	row := r.conn.QueryRow(context.Background(), insertMainRecordInfoQuery, audioName, createdAt)
+
+	var id int
+	err := row.Scan(&id)
+	if err != nil {
+		return domain.Record{}, err
+	}
+
+	return domain.Record{
+		ID:        id,
+		AudioName: audioName,
+		CreatedAt: createdAt,
+	}, nil
+
+}
+
+const insertAdditionRecordInfoQuery = `
+UPDATE conversation(audio_text, good_percent, bad_percent)
+VALUES ($1, $2, $3)
+WHERE conversation_id=$4
+`
+
+func (r *conversationRepo) InsertAdditionRecordInfo(id int, text string, goodPercent int, badPercent int) error {
+	_, err := r.conn.Exec(context.Background(), insertAdditionRecordInfoQuery, text, goodPercent, badPercent, id)
+	return err
 }
