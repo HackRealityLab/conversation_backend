@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os/signal"
@@ -13,10 +14,14 @@ import (
 	"Hackathon/internal/service"
 	"Hackathon/internal/transport/rest"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-migrate/migrate"
 	"github.com/jackc/pgx/v5"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "github.com/golang-migrate/migrate/database/postgres"
+	_ "github.com/golang-migrate/migrate/source/file"
 )
 
 const (
@@ -24,6 +29,7 @@ const (
 )
 
 func Run() {
+	dbConnStr := "postgresql://user:user@postgres:5432/conversations_db"
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -37,7 +43,7 @@ func Run() {
 	minioClient := setupMinio(cfg.MinioConfig)
 
 	go func() {
-		runRestServer(cfg, minioClient, filesCh)
+		runRestServer(cfg, minioClient, dbConnStr, filesCh)
 	}()
 
 	go func() {
@@ -48,8 +54,7 @@ func Run() {
 	close(filesCh)
 }
 
-func runRestServer(cfg *config.Config, minioClient *minio.Client, filesCh chan<- grpclient.FileRequest) {
-	dbConnStr := "postgresql://user:user@postgres:5432/conversations_db"
+func runRestServer(cfg *config.Config, minioClient *minio.Client, dbConnStr string, filesCh chan<- grpclient.FileRequest) {
 	dbConn, err := pgx.Connect(context.Background(), dbConnStr)
 	if err != nil {
 		log.Fatal(err)
@@ -75,6 +80,21 @@ func runRestServer(cfg *config.Config, minioClient *minio.Client, filesCh chan<-
 		log.Fatal(err)
 	}
 	log.Println("Stop server")
+}
+
+func runMigrations(dbConnStr string) {
+	log.Printf("Run migrations on %s\n", dbConnStr)
+	m, err := migrate.New("file://migrations", dbConnStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = m.Up()
+	if errors.Is(err, migrate.ErrNoChange) {
+		log.Println("Migrate no change")
+	} else if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Migrate ran successfully")
 }
 
 func newServeMux(
