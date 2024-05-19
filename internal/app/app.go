@@ -38,8 +38,8 @@ func Run() {
 		log.Fatal(err)
 	}
 
+	runMigrations(dbConnStr)
 	filesCh := make(chan grpclient.FileRequest)
-
 	minioClient := setupMinio(cfg.MinioConfig)
 
 	go func() {
