@@ -88,8 +88,9 @@ func (c *AppClient) asyncClientBidirectionalRPC(
 			int(reply.BadPercent),
 		)
 
-		log.Printf("Err while insert additional info: %s", err.Error())
-
+		if err != nil {
+			log.Printf("Err while insert additional info: %s", err.Error())
+		}
 		log.Printf("Received reply: %+v\n", reply)
 	}
 
