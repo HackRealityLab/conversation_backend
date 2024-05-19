@@ -29,7 +29,7 @@ const (
 )
 
 func Run() {
-	dbConnStr := "postgresql://user:user@postgres:5432/conversations_db"
+	dbConnStr := "postgresql://user:user@postgres:5432/conversations_db?sslmode=disable"
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
