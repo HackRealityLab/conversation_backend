@@ -100,3 +100,8 @@ networks:
 ```
 
 Далее: `docker compose up -d`
+
+Демонстрация:
+Загрузка файла:
+
+![screenshot](img/1.png)
