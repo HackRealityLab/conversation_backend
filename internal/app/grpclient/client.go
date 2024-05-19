@@ -90,7 +90,7 @@ func (c *AppClient) asyncClientBidirectionalRPC(
 
 		log.Printf("Err while insert additional info: %s", err.Error())
 
-		log.Printf("Received reply: %s\n", reply.Text)
+		log.Printf("Received reply: %+v\n", reply)
 	}
 
 	doneCh <- struct{}{}
