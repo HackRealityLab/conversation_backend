@@ -80,5 +80,5 @@ INSERT INTO conversation(conversation_id, audio_name, created_at)
 VALUES ($1, $2, $3)`
 
 func (r *conversationRepo) InsertMainRecordInfo(id int, audioName string, createdAt time.Time) error {
-
+	return nil
 }
