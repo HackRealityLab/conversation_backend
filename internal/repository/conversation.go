@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"Hackathon/internal/domain"
 	"github.com/jackc/pgx/v5"
@@ -10,6 +11,7 @@ import (
 type ConversationRepo interface {
 	GetRecords() ([]domain.Record, error)
 	GetRecord(ID int) (domain.Record, error)
+	InsertMainRecordInfo(id int, audioName string, createdAt time.Time) error
 }
 
 type conversationRepo struct {
@@ -71,4 +73,12 @@ func (r *conversationRepo) GetRecord(ID int) (domain.Record, error) {
 	)
 
 	return record, err
+}
+
+const insertMainRecordInfoQuery = `
+INSERT INTO conversation(conversation_id, audio_name, created_at)
+VALUES ($1, $2, $3)`
+
+func (r *conversationRepo) InsertMainRecordInfo(id int, audioName string, createdAt time.Time) error {
+
 }
