@@ -25,7 +25,7 @@ func NewConversationRepo(conn *pgx.Conn) ConversationRepo {
 }
 
 const getRecordsQuery = `SELECT conversation_id, text, audio_name, created_at, good_percent,
-is_ok FROM conversation`
+bad_percent FROM conversation`
 
 func (r *conversationRepo) GetRecords() ([]domain.Record, error) {
 	rows, err := r.conn.Query(context.Background(), getRecordsQuery)
@@ -56,7 +56,7 @@ func (r *conversationRepo) GetRecords() ([]domain.Record, error) {
 }
 
 const getRecordQuery = `SELECT conversation_id, text, audio_name, created_at, good_percent,
-is_ok FROM conversation
+bad_percent FROM conversation
 WHERE conversation_id=$1`
 
 func (r *conversationRepo) GetRecord(ID int) (domain.Record, error) {
